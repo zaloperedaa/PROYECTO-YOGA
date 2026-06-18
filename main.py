@@ -8,8 +8,14 @@ from datetime import datetime
 
 app = FastAPI()
 
-# Middleware para permitir conexión desde el frontend
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+# Middleware configurado correctamente para evitar el bloqueo de CORS en el navegador
+app.add_middleware(
+    CORSMiddleware, 
+    allow_origins=["*"], 
+    allow_credentials=True, 
+    allow_methods=["*"], 
+    allow_headers=["*"]
+)
 
 # --- CONFIGURACIÓN DE BASE DE DATOS ---
 DB_PATH = "proyecto.db"
@@ -37,12 +43,22 @@ init_db()
 # --- SERVIR FRONTEND ---
 @app.get("/")
 def read_root():
-    # Si tu archivo está en la raíz, usa 'index.html'. Si está en carpeta, 'FRONTEND/index.html'
     return FileResponse('index.html') 
 
 app.mount("/static", StaticFiles(directory="."), name="static")
 
 # --- MÉTODOS API ---
+
+# NUEVO: Endpoint para que el HTML consulte los ingresos actualizados
+@app.get("/api/resumen")
+def obtener_resumen():
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT SUM(monto) FROM pagos")
+    res = cursor.fetchone()
+    total_ingresos = res[0] if res[0] else 0.0
+    conn.close()
+    return {"total_ingresos": total_ingresos}
 
 @app.get("/valentina/ingreso-promedio")
 def obtener_ingreso_promedio():
