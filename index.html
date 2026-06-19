@@ -88,10 +88,10 @@
             display: block;
         }
 
-        /* Grid de KPIs */
+        /* Grid de KPIs - Modificado con CSS Elástico */
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 24px;
             margin-bottom: 40px;
         }
@@ -231,6 +231,7 @@
         .sidebar-section-title { font-size: 16px; font-weight: 600; color: var(--text-main); margin-top: 0; margin-bottom: 15px; }
         .instructor-row { margin-bottom: 18px; }
         .instructor-row div { box-sizing: content-box; }
+        .instructor-row i { display: none; }
         .instructor-meta { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; }
         .progress-bar-bg { background: #eeeeee; height: 8px; border-radius: 10px; overflow: hidden; }
         .progress-bar-fill { background: var(--pink-primary); height: 100%; border-radius: 10px; }
@@ -284,6 +285,14 @@
                     <div class="kpi-subtext">Total recaudado acumulado</div>
                 </div>
                 <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-title">Ingreso Promedio</span>
+                        <span class="kpi-badge purple" style="background:#e8eaf6; color:#3f51b5;">Por Alumno</span>
+                    </div>
+                    <div class="kpi-value" id="kpi-ingreso-promedio">$0</div>
+                    <div class="kpi-subtext">Inversión media por inscrito</div>
+                </div>
+                <div class="kpi-card">
                     <div class="kpi-header"><span class="kpi-title">Alumnos Activos</span><span class="kpi-badge purple" style="background:#ede7f6; color:#5e35b1;">Vigentes</span></div>
                     <div class="kpi-value" id="kpi-alumnos-count">0</div>
                     <div class="kpi-subtext">Total alumnos en el panel</div>
@@ -327,7 +336,7 @@
                                 </tr>
                             </thead>
                             <tbody id="cuerpoTablaAlumnos">
-                                </tbody>
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -448,6 +457,10 @@
     <script>
         const API_URL = "/alumnos/";
 
+        // Variables globales para calcular el promedio dinámicamente
+        let totalIngresos = 0;
+        let totalAlumnos = 0;
+
         // 1. Control del Cambio de Pestañas
         function cambiarPestaña(pestañaClickeada, idContenido) {
             document.querySelectorAll('.tab-item').forEach(tab => tab.classList.remove('active'));
@@ -477,23 +490,37 @@
         // 3. CONEXIÓN EN TIEMPO REAL CON FASTAPI Y SQLITE
         document.addEventListener("DOMContentLoaded", () => {
             cargarAlumnosDesdeBD();
-            cargarIngresosDesdeBD(); // NUEVO: Carga los ingresos totales al iniciar la página
+            cargarIngresosDesdeBD();
         });
 
-        // NUEVO: Función para pedir los ingresos dinámicos al backend (/api/resumen)
+        // NUEVA FUNCIÓN: Procesa y renderiza el ingreso promedio matemático
+        function calcularIngresoPromedio() {
+            const promedio = totalAlumnos > 0 ? totalIngresos / totalAlumnos : 0;
+            
+            document.getElementById('kpi-ingreso-promedio').innerText = new Intl.NumberFormat('es-CL', {
+                style: 'currency',
+                currency: 'CLP',
+                minimumFractionDigits: 0
+            }).format(promedio);
+        }
+
         async function cargarIngresosDesdeBD() {
             try {
                 const respuesta = await fetch("/api/resumen");
                 const datos = await respuesta.json();
                 
-                // Formatea el número a formato moneda (ej: $45.000)
+                totalIngresos = datos.total_ingresos; // Guardamos en la variable global
+                
                 const ingresosFormateados = new Intl.NumberFormat('es-CL', {
                     style: 'currency',
                     currency: 'CLP',
                     minimumFractionDigits: 0
-                }).format(datos.total_ingresos);
+                }).format(totalIngresos);
 
                 document.getElementById('kpi-ingresos-total').innerText = ingresosFormateados;
+                
+                // Actualiza el promedio cada vez que entran datos de ingresos
+                calcularIngresoPromedio();
             } catch (error) {
                 console.error("Error cargando los ingresos desde el backend:", error);
             }
@@ -504,6 +531,8 @@
                 const respuesta = await fetch(API_URL);
                 const alumnos = await respuesta.json();
                 
+                totalAlumnos = alumnos.length; // Guardamos en la variable global
+                
                 const tabla = document.getElementById('cuerpoTablaAlumnos');
                 tabla.innerHTML = ""; 
                 
@@ -511,7 +540,10 @@
                     renderizarAlumnoEnTabla(alumno);
                 });
                 
-                document.getElementById('kpi-alumnos-count').innerText = alumnos.length;
+                document.getElementById('kpi-alumnos-count').innerText = totalAlumnos;
+                
+                // Actualiza el promedio cada vez que entra la lista de alumnos
+                calcularIngresoPromedio();
             } catch (error) {
                 console.error("Error conectando con el backend:", error);
             }
@@ -544,11 +576,12 @@
                     
                     renderizarAlumnoEnTabla(nuevoAlumnoPayload);
                     
-                    let kpi = document.getElementById('kpi-alumnos-count');
-                    kpi.innerText = parseInt(kpi.innerText) + 1;
+                    // Incrementamos el contador global y local de alumnos
+                    totalAlumnos += 1;
+                    document.getElementById('kpi-alumnos-count').innerText = totalAlumnos;
                     
-                    // NUEVO: Volver a llamar a los ingresos para actualizar la interfaz al registrar con éxito
-                    cargarIngresosDesdeBD();
+                    // Re-llamamos a los ingresos (el backend sumará el nuevo paquete y actualizará el promedio)
+                    await cargarIngresosDesdeBD();
                     
                     alert('¡' + nombre + ' registrado con éxito!');
                     document.getElementById('formularioRegistroAlumno').reset();
