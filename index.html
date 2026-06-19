@@ -266,7 +266,6 @@
 
     <div class="main-container">
         
-        <!-- VISTA GENERAL -->
         <div id="vista-general" class="tab-content-panel active">
             <div class="kpi-grid">
                 <div class="kpi-card">
@@ -281,7 +280,7 @@
                 </div>
                 <div class="kpi-card">
                     <div class="kpi-header"><span class="kpi-title">Ingresos Mensuales</span><span class="kpi-badge purple">+18.5%</span></div>
-                    <div class="kpi-value">$52.500</div>
+                    <div class="kpi-value" id="kpi-ingresos-total">$0</div>
                     <div class="kpi-subtext">Total recaudado acumulado</div>
                 </div>
                 <div class="kpi-card">
@@ -293,7 +292,6 @@
 
             <div style="display: grid; grid-template-columns: 1fr 1.8fr 1.2fr; gap: 25px; align-items: start;">
                 
-                <!-- Registrar Alumno -->
                 <div class="content-block">
                     <h3 style="font-size:18px; margin-top:0; margin-bottom:20px; color:var(--pink-primary)">📝 Registrar Alumno</h3>
                     <form id="formularioRegistroAlumno" onsubmit="agregarAlumnoEnTiempoReal(event)">
@@ -317,7 +315,6 @@
                     </form>
                 </div>
 
-                <!-- Tabla de Alumnos -->
                 <div class="content-block">
                     <h3 style="font-size:18px; margin-top:0; margin-bottom:20px;">Alumnos Registrados</h3>
                     <div class="table-responsive">
@@ -330,13 +327,11 @@
                                 </tr>
                             </thead>
                             <tbody id="cuerpoTablaAlumnos">
-                                <!-- Los datos se cargarán dinámicamente desde la API -->
-                            </tbody>
+                                </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- Sidebar Derecho -->
                 <div class="right-sidebar">
                     <div class="content-block" style="padding: 24px;">
                         <h3 class="sidebar-section-title" style="text-align:center;">📲 Código QR de Asistencia</h3>
@@ -359,7 +354,6 @@
             </div>
         </div>
 
-        <!-- INSTRUCTORES -->
         <div id="instructores" class="tab-content-panel">
             <div class="content-block">
                 <h2 class="block-title">Plantilla Oficial de Instructores Activos</h2>
@@ -400,7 +394,6 @@
             </div>
         </div>
 
-        <!-- MEMBRESÍAS -->
         <div id="membresias" class="tab-content-panel">
             <div class="content-block">
                 <h2 class="block-title">Planes Comerciales y Canasta de Paquetes</h2>
@@ -424,7 +417,6 @@
             </div>
         </div>
 
-        <!-- GESTIÓN DE HORARIOS -->
         <div id="horarios" class="tab-content-panel">
             <div class="content-block">
                 <h2 class="block-title">Calendario de Bloques Horarios Activos</h2>
@@ -485,7 +477,27 @@
         // 3. CONEXIÓN EN TIEMPO REAL CON FASTAPI Y SQLITE
         document.addEventListener("DOMContentLoaded", () => {
             cargarAlumnosDesdeBD();
+            cargarIngresosDesdeBD(); // NUEVO: Carga los ingresos totales al iniciar la página
         });
+
+        // NUEVO: Función para pedir los ingresos dinámicos al backend (/api/resumen)
+        async function cargarIngresosDesdeBD() {
+            try {
+                const respuesta = await fetch("/api/resumen");
+                const datos = await respuesta.json();
+                
+                // Formatea el número a formato moneda (ej: $45.000)
+                const ingresosFormateados = new Intl.NumberFormat('es-CL', {
+                    style: 'currency',
+                    currency: 'CLP',
+                    minimumFractionDigits: 0
+                }).format(datos.total_ingresos);
+
+                document.getElementById('kpi-ingresos-total').innerText = ingresosFormateados;
+            } catch (error) {
+                console.error("Error cargando los ingresos desde el backend:", error);
+            }
+        }
 
         async function cargarAlumnosDesdeBD() {
             try {
@@ -534,6 +546,9 @@
                     
                     let kpi = document.getElementById('kpi-alumnos-count');
                     kpi.innerText = parseInt(kpi.innerText) + 1;
+                    
+                    // NUEVO: Volver a llamar a los ingresos para actualizar la interfaz al registrar con éxito
+                    cargarIngresosDesdeBD();
                     
                     alert('¡' + nombre + ' registrado con éxito!');
                     document.getElementById('formularioRegistroAlumno').reset();
