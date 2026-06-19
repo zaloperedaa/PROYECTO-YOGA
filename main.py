@@ -41,7 +41,6 @@ def init_db():
             ("Rafael Araneda", "Hatha Tradicional Terapéutico", "Lun 08:30 AM", 75, "Full Time"),
             ("Karol G 🔥", "Asanas Avanzadas y Power Yoga", "Mié 12:00 PM", 92, "Máxima Ocupación")
         ]
-        # CORREGIDO: Se cambió 'specialty' por 'especialidad' para coincidir con la tabla
         cursor.executemany('''
             INSERT INTO instructores (nombre, especialidad, horario_pico, porcentaje_ocupacion, tag)
             VALUES (?, ?, ?, ?, ?)
@@ -50,15 +49,17 @@ def init_db():
     conn.commit()
     conn.close()
 
-# Ejecutamos la base de datos aquí para que Gunicorn en Render la cree al encender
+# Inicializamos la base de datos
 init_db()
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# --- APIS DE ALUMNOS Y RESUMEN ---
+# --- APIS DE ALUMNOS (Multi-ruta defensiva para que funcione con cualquier frontend) ---
+@app.route('/alumnos', methods=['GET', 'POST'])
 @app.route('/alumnos/', methods=['GET', 'POST'])
+@app.route('/api/alumnos', methods=['GET', 'POST'])
 def gestionar_alumnos():
     conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
@@ -77,6 +78,7 @@ def gestionar_alumnos():
     conn.close()
     return jsonify(alumnos)
 
+# --- API DE RESUMEN (CORREGIDA: Ingresos 100% dinámicos) ---
 @app.route('/api/resumen')
 def api_resumen():
     conn = sqlite3.connect(DB_NAME)
@@ -87,13 +89,16 @@ def api_resumen():
     
     total = 0
     for p in paquetes:
-        if "10" in p[0]: total += 25000
-        elif "20" in p[0]: total += 38000
-        elif "ilimitada" in p[0]: total += 45000
+        if p[0]:
+            paquete_texto = str(p[0]).lower()
+            if "10" in paquete_texto: total += 25000
+            elif "20" in paquete_texto: total += 38000
+            elif "ilimitada" in paquete_texto or "ilimitado" in paquete_texto: total += 45000
         
-    return jsonify({"total_ingresos": max(total, 153000)})
+    # CORREGIDO: Se quitó el max(total, 153000) para que muestre el valor real calculado
+    return jsonify({"total_ingresos": total})
 
-# --- NUEVAS APIS DE INSTRUCTORES (GET, POST, DELETE) ---
+# --- APIS DE INSTRUCTORES ---
 @app.route('/api/instructores', methods=['GET', 'POST'])
 def gestionar_instructores():
     conn = sqlite3.connect(DB_NAME)
