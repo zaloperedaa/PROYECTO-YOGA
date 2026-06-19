@@ -28,8 +28,15 @@ class Instructor(BaseModel):
     ocupacion: int
 
 def conectar_db():
-    # Se conecta buscando la carpeta 'db' saliendo desde 'backend'
-    path_db = os.path.join("..", "db", "lumina_yoga.db")
+    # 🌟 CORRECCIÓN CRÍTICA DE RUTA (Evita el Exit Status 3) 🌟
+    # Obtiene la ubicación exacta en tiempo real de este archivo main.py
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    # Apunta correctamente a la carpeta db saliendo un nivel hacia arriba de forma absoluta
+    path_db = os.path.normpath(os.path.join(base_dir, "..", "db", "lumina_yoga.db"))
+    
+    # Si la carpeta /db no existe físicamente en tu PC, se crea automáticamente aquí
+    os.makedirs(os.path.dirname(path_db), exist_ok=True)
+    
     conn = sqlite3.connect(path_db)
     conn.row_factory = sqlite3.Row
     return conn
@@ -37,27 +44,31 @@ def conectar_db():
 # Al iniciar, creamos las tablas si no existen por seguridad
 @app.on_event("startup")
 def crear_tablas_iniciales():
-    conn = conectar_db()
-    cursor = conn.cursor()
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS alumnos (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombre TEXT NOT NULL,
-        telefono TEXT NOT NULL,
-        paquete TEXT NOT NULL
-    );
-    """)
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS instructores (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombre TEXT NOT NULL,
-        especialidad TEXT NOT NULL,
-        horario_pico TEXT NOT NULL,
-        ocupacion INTEGER NOT NULL
-    );
-    """)
-    conn.commit()
-    conn.close()
+    try:
+        conn = conectar_db()
+        cursor = conn.cursor()
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS alumnos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT NOT NULL,
+            telefono TEXT NOT NULL,
+            paquete TEXT NOT NULL
+        );
+        """)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS instructores (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nombre TEXT NOT NULL,
+            especialidad TEXT NOT NULL,
+            horario_pico TEXT NOT NULL,
+            ocupacion INTEGER NOT NULL
+        );
+        """)
+        conn.commit()
+        conn.close()
+        print("🚀 Base de datos inicializada y conectada con éxito sin errores.")
+    except Exception as e:
+        print(f"❌ Error al intentar inicializar la base de datos: {e}")
 
 # ================= ENDPOINTS DE ALUMNOS =================
 @app.get("/alumnos/")
