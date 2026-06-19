@@ -88,7 +88,7 @@
             display: block;
         }
 
-        /* Grid de KPIs - Modificado con CSS Elástico */
+        /* Grid de KPIs - CSS Elástico */
         .kpi-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -232,7 +232,7 @@
         .instructor-row { margin-bottom: 18px; }
         .instructor-row div { box-sizing: content-box; }
         .instructor-row i { display: none; }
-        .instructor-meta { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; }
+        .instructor-meta { display: flex; justify-content: space-between; align-items: flex-end; font-size: 14px; margin-bottom: 6px; }
         .progress-bar-bg { background: #eeeeee; height: 8px; border-radius: 10px; overflow: hidden; }
         .progress-bar-fill { background: var(--pink-primary); height: 100%; border-radius: 10px; }
 
@@ -352,12 +352,53 @@
                         </div>
                     </div>
 
+                    <!-- MODIFICACIÓN AQUÍ: Se añadieron los Horarios Pico debajo de cada instructor -->
                     <div class="content-block" style="padding: 24px;">
-                        <h3 class="sidebar-section-title">Ocupación</h3>
-                        <div class="instructor-row"><div class="instructor-meta"><span>Leo Rey</span><strong>80%</strong></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 80%;"></div></div></div>
-                        <div class="instructor-row"><div class="instructor-meta"><span>Tonka Tomicic</span><strong>88%</strong></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 88%;"></div></div></div>
-                        <div class="instructor-row"><div class="instructor-meta"><span>Rafael Araneda</span><strong>75%</strong></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 75%;"></div></div></div>
-                        <div class="instructor-row"><div class="instructor-meta"><span>Karol G</span><strong>92%</strong></div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 92%; background:#c2185b;"></div></div></div>
+                        <h3 class="sidebar-section-title">Ocupación y Horario Pico</h3>
+                        
+                        <div class="instructor-row">
+                            <div class="instructor-meta">
+                                <div>
+                                    <span>Leo Rey</span><br>
+                                    <small style="color:var(--text-sub); font-size:11px;">Pico: Jue 19:00 PM</small>
+                                </div>
+                                <strong>80%</strong>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 80%;"></div></div>
+                        </div>
+                        
+                        <div class="instructor-row">
+                            <div class="instructor-meta">
+                                <div>
+                                    <span>Tonka Tomicic</span><br>
+                                    <small style="color:var(--text-sub); font-size:11px;">Pico: Mar 09:30 AM</small>
+                                </div>
+                                <strong>88%</strong>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 88%;"></div></div>
+                        </div>
+                        
+                        <div class="instructor-row">
+                            <div class="instructor-meta">
+                                <div>
+                                    <span>Rafael Araneda</span><br>
+                                    <small style="color:var(--text-sub); font-size:11px;">Pico: Lun 08:30 AM</small>
+                                </div>
+                                <strong>75%</strong>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 75%;"></div></div>
+                        </div>
+                        
+                        <div class="instructor-row">
+                            <div class="instructor-meta">
+                                <div>
+                                    <span style="font-weight:700; color:var(--pink-primary);">Karol G 🔥</span><br>
+                                    <small style="color:var(--pink-primary); font-weight:600; font-size:11px;">Pico: Mié 12:00 PM</small>
+                                </div>
+                                <strong style="color:var(--pink-primary);">92%</strong>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 92%; background:#c2185b;"></div></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -457,11 +498,9 @@
     <script>
         const API_URL = "/alumnos/";
 
-        // Variables globales para calcular el promedio dinámicamente
         let totalIngresos = 0;
         let totalAlumnos = 0;
 
-        // 1. Control del Cambio de Pestañas
         function cambiarPestaña(pestañaClickeada, idContenido) {
             document.querySelectorAll('.tab-item').forEach(tab => tab.classList.remove('active'));
             pestañaClickeada.classList.add('active');
@@ -470,7 +509,6 @@
             document.getElementById(idContenido).classList.add('active');
         }
 
-        // 2. Control Interactivo del Calendario
         function actualizarVistaHorario(diaClickeado, nombreDia, clase, instructor, estado) {
             document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('active'));
             diaClickeado.classList.add('active');
@@ -487,13 +525,11 @@
             }
         }
 
-        // 3. CONEXIÓN EN TIEMPO REAL CON FASTAPI Y SQLITE
         document.addEventListener("DOMContentLoaded", () => {
             cargarAlumnosDesdeBD();
             cargarIngresosDesdeBD();
         });
 
-        // NUEVA FUNCIÓN: Procesa y renderiza el ingreso promedio matemático
         function calcularIngresoPromedio() {
             const promedio = totalAlumnos > 0 ? totalIngresos / totalAlumnos : 0;
             
@@ -509,7 +545,7 @@
                 const respuesta = await fetch("/api/resumen");
                 const datos = await respuesta.json();
                 
-                totalIngresos = datos.total_ingresos; // Guardamos en la variable global
+                totalIngresos = datos.total_ingresos;
                 
                 const ingresosFormateados = new Intl.NumberFormat('es-CL', {
                     style: 'currency',
@@ -518,8 +554,6 @@
                 }).format(totalIngresos);
 
                 document.getElementById('kpi-ingresos-total').innerText = ingresosFormateados;
-                
-                // Actualiza el promedio cada vez que entran datos de ingresos
                 calcularIngresoPromedio();
             } catch (error) {
                 console.error("Error cargando los ingresos desde el backend:", error);
@@ -531,7 +565,7 @@
                 const respuesta = await fetch(API_URL);
                 const alumnos = await respuesta.json();
                 
-                totalAlumnos = alumnos.length; // Guardamos en la variable global
+                totalAlumnos = alumnos.length;
                 
                 const tabla = document.getElementById('cuerpoTablaAlumnos');
                 tabla.innerHTML = ""; 
@@ -541,8 +575,6 @@
                 });
                 
                 document.getElementById('kpi-alumnos-count').innerText = totalAlumnos;
-                
-                // Actualiza el promedio cada vez que entra la lista de alumnos
                 calcularIngresoPromedio();
             } catch (error) {
                 console.error("Error conectando con el backend:", error);
@@ -576,11 +608,9 @@
                     
                     renderizarAlumnoEnTabla(nuevoAlumnoPayload);
                     
-                    // Incrementamos el contador global y local de alumnos
                     totalAlumnos += 1;
                     document.getElementById('kpi-alumnos-count').innerText = totalAlumnos;
                     
-                    // Re-llamamos a los ingresos (el backend sumará el nuevo paquete y actualizará el promedio)
                     await cargarIngresosDesdeBD();
                     
                     alert('¡' + nombre + ' registrado con éxito!');
