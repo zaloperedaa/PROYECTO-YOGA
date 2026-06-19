@@ -3,399 +3,731 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lumina Yoga - Panel de Control Inteligente</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>Panel de Control - Lumina Yoga</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --bg-color: #f4f7f6;
-            --card-bg: #ffffff;
-            --text-main: #2c3e50;
-            --accent-color: #7f8c8d;
-            --primary-yoga: #6c5ce7;
-            --primary-light: #a29bfe;
-            --success: #2ecc71;
-            --danger: #e74c3c;
-            --border-color: #e2e8f0;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Poppins', sans-serif;
+            --pink-header: #c2185b;
+            --pink-primary: #e91e63;
+            --pink-bg: #fff5f8;
+            --text-main: #4a1525;
+            --text-sub: #757575;
+            --card-radius: 24px;
+            --shadow: 0 10px 30px rgba(74, 21, 37, 0.03);
         }
 
         body {
-            background-color: var(--bg-color);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--pink-bg);
             color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Banner Superior */
+        .header-admin {
+            background-color: var(--pink-header);
+            color: white;
+            padding: 20px 40px;
+            font-size: 16px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(194, 24, 91, 0.15);
+        }
+
+        /* Pestañas de Navegación */
+        .nav-tabs-container {
+            background: white;
+            padding: 0 40px;
+            border-bottom: 1px solid #fcedf2;
             display: flex;
-            min-height: 100vh;
+            gap: 30px;
+        }
+        .tab-item {
+            padding: 25px 0;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-sub);
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            transition: color 0.2s;
+            user-select: none;
+        }
+        .tab-item:hover, .tab-item.active {
+            color: var(--pink-primary);
+        }
+        .tab-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background-color: var(--pink-primary);
+            border-radius: 4px 4px 0 0;
         }
 
         /* Contenedor Principal */
-        .dashboard-container {
-            display: flex;
-            width: 100%;
+        .main-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 40px;
+            box-sizing: border-box;
         }
 
-        /* Área de Contenido Central */
-        .main-content {
-            flex: 3;
-            padding: 30px;
-            overflow-y: auto;
+        .tab-content-panel {
+            display: none;
+        }
+        .tab-content-panel.active {
+            display: block;
         }
 
-        /* Barra Lateral Derecha */
-        .sidebar-right {
-            flex: 1;
-            background-color: var(--card-bg);
-            border-left: 1px solid var(--border-color);
-            padding: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-        }
-
-        header h1 {
-            font-size: 24px;
-            font-weight: 600;
-            color: var(--primary-yoga);
-            margin-bottom: 5px;
-        }
-
-        header p {
-            color: var(--accent-color);
-            font-size: 14px;
-            margin-bottom: 25px;
-        }
-
-        /* Indicadores analíticos del Caso */
+        /* Grid de KPIs - CSS Elástico */
         .kpi-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 20px;
-            margin-bottom: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
         }
-
         .kpi-card {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-            border-bottom: 4px solid var(--primary-light);
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid #fcedf2;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
-
-        .kpi-card.negative { border-bottom-color: var(--danger); }
-        .kpi-card.positive { border-bottom-color: var(--success); }
-
-        .kpi-card h3 {
-            font-size: 13px;
-            color: var(--accent-color);
-            text-transform: uppercase;
-            margin-bottom: 10px;
-        }
-
-        .kpi-card .value {
-            font-size: 26px;
-            font-weight: 700;
-        }
-
-        /* Formularios y Tablas */
-        .section-card {
-            background: var(--card-bg);
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-            margin-bottom: 25px;
-        }
-
-        .section-card h2 {
-            font-size: 18px;
-            margin-bottom: 20px;
-            color: var(--text-main);
-            border-left: 4px solid var(--primary-yoga);
-            padding-left: 10px;
-        }
-
-        .form-group {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        input, select, button {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 14px;
-            outline: none;
-        }
-
-        input:focus, select:focus {
-            border-color: var(--primary-yoga);
-        }
-
-        button {
-            background-color: var(--primary-yoga);
-            color: white;
-            font-weight: 500;
-            cursor: pointer;
-            border: none;
-            transition: background 0.2s;
-        }
-
-        button:hover {
-            background-color: #5b4cc4;
-        }
-
-        /* Tabla de Alumnos */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-
-        th, td {
-            padding: 12px 15px;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 14px;
-        }
-
-        th {
-            background-color: #f8fafc;
-            color: var(--accent-color);
-            font-weight: 500;
-        }
-
-        /* Estilos lista de Instructores */
-        .instructor-item {
+        .kpi-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px;
-            background: #f8fafc;
-            border-radius: 8px;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
-
-        .instructor-info h4 {
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .instructor-info p {
+        .kpi-title {
             font-size: 11px;
-            color: var(--accent-color);
+            font-weight: 700;
+            color: #888888;
+            text-transform: uppercase;
         }
-
-        .badge-demand {
-            background-color: var(--primary-light);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 12px;
+        .kpi-badge {
+            font-size: 11px;
             font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+        .kpi-badge.green { background: #e2fbf0; color: #00875a; }
+        .kpi-badge.purple { background: #f3e5f5; color: #7b1fa2; }
+        .kpi-value {
+            font-size: 34px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .kpi-subtext {
+            font-size: 12px;
+            color: var(--text-sub);
         }
 
-        /* Simulación de Código QR */
-        .qr-box {
-            border: 2px dashed var(--primary-light);
-            padding: 20px;
-            text-align: center;
-            border-radius: 8px;
-            background: #faf9ff;
+        /* Bloques de Tarjetas Blancas */
+        .content-block {
+            background: white;
+            border-radius: var(--card-radius);
+            padding: 35px;
+            box-shadow: var(--shadow);
+            border: 1px solid #fcedf2;
+            margin-bottom: 30px;
         }
+        .block-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--pink-primary);
+            margin-top: 0;
+            margin-bottom: 25px;
+        }
+
+        /* Formularios */
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-main);
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #f0d5de;
+            border-radius: 10px;
+            font-family: inherit;
+            box-sizing: border-box;
+            outline: none;
+            font-size: 14px;
+        }
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--pink-primary);
+        }
+        .btn-submit {
+            background: var(--pink-primary);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 14px;
+        }
+        .btn-submit:hover { background: var(--pink-header); }
+
+        /* Código QR */
+        .qr-wrapper {
+            text-align: center;
+            padding: 20px;
+            background: #fff9fa;
+            border: 2px dashed #fcdce6;
+            border-radius: 16px;
+        }
+        .qr-placeholder {
+            width: 160px;
+            height: 160px;
+            background: white;
+            margin: 0 auto 15px;
+            border: 1px solid #fcedf2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+        }
+        .qr-img { max-width: 90%; max-height: 90%; }
+
+        /* Tablas */
+        .table-responsive { width: 100%; overflow-x: auto; }
+        .alumnos-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .alumnos-table th { font-size: 12px; font-weight: 700; color: #9e9e9e; text-transform: uppercase; padding-bottom: 15px; border-bottom: 1px solid #f5f5f5; }
+        .alumnos-table td { padding: 18px 0; border-bottom: 1px solid #fafafa; vertical-align: middle; }
+        
+        .alumno-profile { display: flex; align-items: center; gap: 12px; }
+        .avatar-circle { width: 38px; height: 38px; background: #fce4ec; color: var(--pink-primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+        .alumno-name { font-weight: 600; color: var(--text-main); font-size: 14px; }
+        .alumno-phone { font-size: 12px; color: var(--text-sub); }
+        .badge-status-table { background: #fff3e0; color: #ef6c00; font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 6px; }
+        .btn-pasar-lista { background: #fce4ec; color: var(--pink-header); border: none; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .btn-pasar-lista:hover { background: #f8bbd0; }
+
+        /* Sidebar Derecho */
+        .right-sidebar { display: flex; flex-direction: column; gap: 30px; }
+        .sidebar-section-title { font-size: 16px; font-weight: 600; color: var(--text-main); margin-top: 0; margin-bottom: 15px; }
+        .instructor-row { margin-bottom: 18px; }
+        .instructor-row div { box-sizing: content-box; }
+        .instructor-row i { display: none; }
+        .instructor-meta { display: flex; justify-content: space-between; align-items: flex-end; font-size: 14px; margin-bottom: 6px; }
+        .progress-bar-bg { background: #eeeeee; height: 8px; border-radius: 10px; overflow: hidden; }
+        .progress-bar-fill { background: var(--pink-primary); height: 100%; border-radius: 10px; }
+
+        /* Tarjetas Extendidas - Instructores */
+        .instructor-card-extended { display: flex; align-items: center; gap: 20px; background: #fff9fa; padding: 15px; border-radius: 16px; margin-bottom: 15px; border: 1px solid #fcedf2; }
+        .instructor-img-placeholder { width: 60px; height: 60px; border-radius: 50%; background: var(--pink-header); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 20px; }
+
+        /* Membresías */
+        .package-card { border: 1px solid #fcedf2; border-radius: 16px; padding: 20px; background: white; text-align: center; transition: transform 0.2s; }
+        .package-card:hover { transform: translateY(-5px); }
+        .package-price { font-size: 26px; font-weight: 700; color: var(--pink-primary); margin: 10px 0; }
+
+        /* Calendario Horarios */
+        .calendar-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; text-align: center; margin-top: 15px; }
+        .calendar-day { background: #fff9fa; padding: 15px 5px; border-radius: 12px; border: 1px solid #fcedf2; cursor: pointer; transition: 0.2s; }
+        .calendar-day:hover { background: #fce4ec; }
+        .calendar-day.active { background: var(--pink-primary); color: white; border-color: var(--pink-primary); }
+
+        .btn-delete-instructor { background: #ffebee; color: #c62828; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .btn-delete-instructor:hover { background: #ffcdd2; }
     </style>
 </head>
 <body>
 
-<div class="dashboard-container">
-    <main class="main-content">
-        <header>
-            <h1>Panel de Analítica - Lumina Yoga</h1>
-            <p>Monitoreo en tiempo real de operaciones, automatización y retención.</p>
-        </header>
+    <div class="header-admin">
+        Panel de Control General para la Dueña &amp; Administradora
+    </div>
 
-        <div class="kpi-grid">
-            <div class="kpi-card negative">
-                <h3>Fricción Tecnológica</h3>
-                <div class="value">-2.1%</div>
-            </div>
-            <div class="kpi-card positive">
-                <h3>Automatizaciones</h3>
-                <div class="value">12%</div>
-            </div>
-            <div class="kpi-card">
-                <h3>Deserción Predictiva</h3>
-                <div class="value" style="color: var(--danger);">4.2%</div>
-            </div>
-        </div>
+    <div class="nav-tabs-container">
+        <div class="tab-item active" onclick="cambiarPestaña(this, 'vista-general')">Vista General</div>
+        <div class="tab-item" onclick="cambiarPestaña(this, 'instructores')">Instructores</div>
+        <div class="tab-item" onclick="cambiarPestaña(this, 'membresias')">Membresías y Paquetes</div>
+        <div class="tab-item" onclick="cambiarPestaña(this, 'horarios')">Gestión de Horarios</div>
+    </div>
 
-        <div class="section-card">
-            <h2>Registrar Nuevo Alumno</h2>
-            <form id="form-alumno" onsubmit="registrarAlumno(event)">
-                <div class="form-group">
-                    <input type="text" id="al-nombre" placeholder="Nombre completo" required>
-                    <input type="tel" id="al-telefono" placeholder="Teléfono" required>
-                    <select id="al-paquete" required>
-                        <option value="">Selecciona Membresía</option>
-                        <option value="10 clases">Pase 10 Clases ($25.000)</option>
-                        <option value="20 clases">Pase 20 Clases ($38.000)</option>
-                        <option value="mensualidad ilimitada">Mensualidad Ilimitada ($45.000)</option>
-                        <option value="Ninguno">Ninguno / Inactivo</option>
-                    </select>
+    <div class="main-container">
+        
+        <div id="vista-general" class="tab-content-panel active">
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-header"><span class="kpi-title">Fricción Tecnológica</span><span class="kpi-badge green">-2.1%</span></div>
+                    <div class="kpi-value">12%</div>
+                    <div class="kpi-subtext">Nivel óptimo de automatizaciones</div>
                 </div>
-                <button type="submit">Guardar en Base de Datos SQL</button>
-            </form>
-        </div>
-
-        <div class="section-card">
-            <h2>Alumnos Registrados en el Sistema</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Teléfono</th>
-                        <th>Plan Contratado</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-alumnos">
-                    </tbody>
-            </table>
-        </div>
-    </main>
-
-    <aside class="sidebar-right">
-        <div class="section-card" style="box-shadow: none; padding: 0;">
-            <h2>Inscripción Rápida (QR)</h2>
-            <div class="qr-box">
-                <p style="font-size: 13px; margin-bottom: 10px; color: var(--accent-color);">Escanea para simular el Check-in automático en la entrada</p>
-                <div style="font-size: 40px;">📱⇄ 🧱</div>
-            </div>
-        </div>
-
-        <div class="section-card" style="box-shadow: none; padding: 0;">
-            <h2>Registrar Instructor Estrella</h2>
-            <form id="form-instructor" onsubmit="registrarInstructor(event)" style="display: flex; flex-direction: column; gap: 10px;">
-                <input type="text" id="inst-nombre" placeholder="Nombre de Instructor" required>
-                <input type="text" id="inst-especialidad" placeholder="Ej: Power Yoga, Hatha" required>
-                <input type="text" id="inst-horario" placeholder="Ej: Miércoles 12:00 PM" required>
-                <input type="number" id="inst-ocupacion" placeholder="% Ocupación esperado (Ej: 85)" min="0" max="100" required>
-                <button type="submit" style="background-color: var(--success);">Agregar a la Tabla</button>
-            </form>
-        </div>
-
-        <div class="section-card" style="box-shadow: none; padding: 0;">
-            <h2>Demanda de Instructores</h2>
-            <p style="font-size: 11px; color: var(--accent-color); margin-bottom: 10px;">Datos leídos desde la Base de Datos SQL Relacional</p>
-            <div id="lista-instructores">
+                <div class="kpi-card">
+                    <div class="kpi-header"><span class="kpi-title">Deserción Predictiva</span><span class="kpi-badge green" style="background:#e8f5e9; color:#2e7d32;">Excelente</span></div>
+                    <div class="kpi-value">4.2%</div>
+                    <div class="kpi-subtext">Tasa de deserción proyectada</div>
                 </div>
-        </div>
-    </aside>
-</div>
+                <div class="kpi-card">
+                    <div class="kpi-header"><span class="kpi-title">Ingresos Mensuales</span><span class="kpi-badge purple">+18.5%</span></div>
+                    <div class="kpi-value" id="kpi-ingresos-total">$0</div>
+                    <div class="kpi-subtext">Total recaudado acumulado</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <span class="kpi-title">Ingreso Promedio</span>
+                        <span class="kpi-badge purple" style="background:#e8eaf6; color:#3f51b5;">Por Alumno</span>
+                    </div>
+                    <div class="kpi-value" id="kpi-ingreso-promedio">$0</div>
+                    <div class="kpi-subtext">Inversión media por inscrito</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-header"><span class="kpi-title">Alumnos Activos</span><span class="kpi-badge purple" style="background:#ede7f6; color:#5e35b1;">Vigentes</span></div>
+                    <div class="kpi-value" id="kpi-alumnos-count">0</div>
+                    <div class="kpi-subtext">Total alumnos en el panel</div>
+                </div>
+            </div>
 
-<script>
-    const API_URL = "http://127.000.0.1:8000"; // Asegúrate que tu uvicorn corra en este puerto
+            <div style="display: grid; grid-template-columns: 1fr 1.8fr 1.2fr; gap: 25px; align-items: start;">
+                
+                <div class="content-block">
+                    <h3 style="font-size:18px; margin-top:0; margin-bottom:20px; color:var(--pink-primary)">📝 Registrar Alumno</h3>
+                    <form id="formularioRegistroAlumno" onsubmit="agregarAlumnoEnTiempoReal(event)">
+                        <div class="form-group">
+                            <label>Nombre Completo</label>
+                            <input type="text" id="inputNombre" placeholder="Ej. Juan Pérez" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Teléfono</label>
+                            <input type="tel" id="inputTelefono" placeholder="Ej. 912345678" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Asignar Paquete Inicial</label>
+                            <select id="inputPaquete">
+                                <option value="10 clases">10 clases</option>
+                                <option value="20 clases">20 clases</option>
+                                <option value="mensualidad ilimitada">mensualidad ilimitada</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-submit">Guardar en Base de Datos</button>
+                    </form>
+                </div>
 
-    // Al cargar la página, traemos toda la data de la base de datos SQL
-    document.addEventListener("DOMContentLoaded", () => {
-        cargarAlumnos();
-        cargarInstructores();
-    });
+                <div class="content-block">
+                    <h3 style="font-size:18px; margin-top:0; margin-bottom:20px;">Alumnos Registrados</h3>
+                    <div class="table-responsive">
+                        <table class="alumnos-table">
+                            <thead>
+                                <tr>
+                                    <th>Alumno</th>
+                                    <th>Paquete</th>
+                                    <th>Estatus / Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cuerpoTablaAlumnos">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
 
-    // 1. Cargar Alumnos de SQL
-    function cargarAlumnos() {
-        fetch(`${API_URL}/alumnos/`)
-            .then(res => res.json())
-            .then(data => {
-                const tbody = document.getElementById("tabla-alumnos");
-                tbody.innerHTML = "";
-                data.forEach(alumno => {
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><strong>#${alumno.id}</strong></td>
-                            <td>${alumno.nombre}</td>
-                            <td>${alumno.telefono}</td>
-                            <td><span style="color: var(--primary-yoga); font-weight:500;">${alumno.paquete}</span></td>
-                        </tr>
-                    `;
-                });
-            })
-            .catch(err => console.error("Error cargando alumnos:", err));
-    }
-
-    // 2. Registrar Alumno en SQL
-    function registrarAlumno(e) {
-        e.preventDefault();
-        const payload = {
-            nombre: document.getElementById("al-nombre").value,
-            telefono: document.getElementById("al-telefono").value,
-            paquete: document.getElementById("al-paquete").value
-        };
-
-        fetch(`${API_URL}/alumnos/`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(() => {
-            document.getElementById("form-alumno").reset();
-            cargarAlumnos(); // Refresca la tabla instantáneamente
-        })
-        .catch(err => alert("Error al guardar alumno: " + err));
-    }
-
-    // 3. Cargar Instructores dinámicamente de SQL
-    function cargarInstructores() {
-        fetch(`${API_URL}/instructores/`)
-            .then(res => res.json())
-            .then(data => {
-                const contenedor = document.getElementById("lista-instructores");
-                contenedor.innerHTML = "";
-                data.forEach(inst => {
-                    contenedor.innerHTML += `
-                        <div class="instructor-item">
-                            <div class="instructor-info">
-                                <h4>${inst.nombre}</h4>
-                                <p>${inst.especialidad}</p>
-                                <p style="color: var(--primary-yoga); font-weight: 500;">Pico: ${inst.horario_pico}</p>
+                <div class="right-sidebar">
+                    <div class="content-block" style="padding: 24px;">
+                        <h3 class="sidebar-section-title" style="text-align:center;">📲 Código QR de Asistencia</h3>
+                        <div class="qr-wrapper">
+                            <div class="qr-placeholder">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=LuminaYogaCheckIn" alt="QR Escáner" class="qr-img">
                             </div>
-                            <span class="badge-demand">${inst.ocupacion}%</span>
+                            <span style="font-size:11px; color:var(--text-sub); display:block;">Los alumnos escanean este código en recepción para auto-marcar su asistencia.</span>
+                        </div>
+                    </div>
+
+                    <div class="content-block" style="padding: 24px;">
+                        <h3 class="sidebar-section-title">Ocupación y Horario Pico</h3>
+                        <div id="contenedorSidebarInstructores">
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="instructores" class="tab-content-panel">
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 25px; align-items: start;">
+                
+                <div class="content-block">
+                    <h3 style="font-size:18px; margin-top:0; margin-bottom:20px; color:var(--pink-primary)">🧘‍♀️ Agregar Instructor</h3>
+                    <form id="formularioRegistroInstructor" onsubmit="agregarInstructorEnTiempoReal(event)">
+                        <div class="form-group">
+                            <label>Nombre Completo</label>
+                            <input type="text" id="insNombre" placeholder="Ej. Karol G" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Especialidad</label>
+                            <input type="text" id="insEspecialidad" placeholder="Ej. Power Yoga Avanzado" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Horario Pico</label>
+                            <input type="text" id="insHorario" placeholder="Ej. Mié 12:00 PM" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Porcentaje de Ocupación (%)</label>
+                            <input type="number" id="insOcupacion" min="0" max="100" placeholder="Ej. 92" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Etiqueta / Reconocimiento</label>
+                            <input type="text" id="insTag" placeholder="Ej. Destacada del Mes">
+                        </div>
+                        <button type="submit" class="btn-submit">Guardar Instructor</button>
+                    </form>
+                </div>
+
+                <div class="content-block">
+                    <h2 class="block-title">Plantilla Oficial de Instructores Activos</h2>
+                    <div id="cuerpoListaInstructores" style="display:grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                        </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="membresias" class="tab-content-panel">
+            <div class="content-block">
+                <h2 class="block-title">Planes Comerciales y Canasta de Paquetes</h2>
+                <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:20px;">
+                    <div class="package-card">
+                        <h4 style="margin:0; color:var(--text-sub)">Pack 10 Clases</h4>
+                        <div class="package-price">$25.000</div>
+                        <p style="font-size:13px; color:var(--text-sub)">Ideal para entrenar de forma flexible.</p>
+                    </div>
+                    <div class="package-card" style="border-color:var(--pink-primary); background:#fff5f8;">
+                        <h4 style="margin:0; color:var(--pink-primary)">Mensualidad Ilimitada</h4>
+                        <div class="package-price">$45.000 <span style="font-size:12px; color:black;">/mes</span></div>
+                        <p style="font-size:13px; color:var(--text-sub)">Clases ilimitadas. Acceso total a todas las salas del centro.</p>
+                    </div>
+                    <div class="package-card">
+                        <h4 style="margin:0; color:var(--text-sub)">Pack 20 Clases</h4>
+                        <div class="package-price">$38.000</div>
+                        <p style="font-size:13px; color:var(--text-sub)">Bolsa extendida de créditos con vencimiento flexible.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="horarios" class="tab-content-panel">
+            <div class="content-block">
+                <h2 class="block-title">Calendario de Bloques Horarios Activos</h2>
+                <p style="color:var(--text-sub)">Haz clic en cualquier día de la semana para inspeccionar las clases programadas en tiempo real.</p>
+                
+                <div class="calendar-strip">
+                    <div class="calendar-day active" onclick="actualizarVistaHorario(this, 'Lunes', '08:30 AM - Hatha Tradicional', 'Rafael Araneda', 'Sala A (Cupos Disponibles)')"><div>Lun</div><strong>15</strong></div>
+                    <div class="calendar-day" onclick="actualizarVistaHorario(this, 'Martes', '09:30 AM - Vinyasa Flow Dinámico', 'Tonka Tomicic', 'Sala Principal (Sala Llena)')"><div>Mar</div><strong>16</strong></div>
+                    <div class="calendar-day" onclick="actualizarVistaHorario(this, 'Miércoles', '12:00 PM - Power Yoga Avanzado', 'Karol G', 'Sala B (3 Cupos Restantes)')"><div>Mié</div><strong>17</strong></div>
+                    <div class="calendar-day" onclick="actualizarVistaHorario(this, 'Jueves', '19:00 PM - Kundalini & Meditación', 'Leo Rey', 'Sala de Meditación (Cupos Disponibles)')"><div>Jue</div><strong>18</strong></div>
+                    <div class="calendar-day" onclick="actualizarVistaHorario(this, 'Viernes', '10:00 AM - Yoga Prenatal y Hatha', 'Rafael Araneda', 'Sala A (Últimos Cupos)')"><div>Vie</div><strong>19</strong></div>
+                    <div class="calendar-day" onclick="actualizarVistaHorario(this, 'Sábado', '11:30 AM - Workshop de Asanas Especial', 'Karol G', 'Patio Central (Abierto)')"><div>Sáb</div><strong>20</strong></div>
+                    <div class="calendar-day" onclick="actualizarVistaHorario(this, 'Domingo', 'Cerrado por Descanso General', 'Todo el Equipo', 'N/A')"><div>Dom</div><strong>21</strong></div>
+                </div>
+
+                <div id="contenedorBloqueHorario" style="margin-top:30px; background:#fafafa; padding:25px; border-radius:16px; border:1px solid #eedbe1;">
+                    <h4 id="txtDiaSeleccionado" style="margin:0 0 10px 0; font-family:'Playfair Display', serif; font-size:20px; color:var(--pink-primary);">Lunes</h4>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; font-size:14px;">
+                        <div>📌 <strong>Clase:</strong> <span id="txtClaseNombre">08:30 AM - Hatha Tradicional</span></div>
+                        <div>👤 <strong>Instructor:</strong> <span id="txtClaseInstructor">Rafael Araneda</span></div>
+                        <div>🚪 <strong>Ubicación/Estado:</strong> <span id="txtClaseEstado" style="color:#2e7d32; font-weight:600;">Sala A (Cupos Disponibles)</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const API_URL = "/alumnos/";
+        const API_INSTRUCTORES = "/api/instructores";
+
+        let totalIngresos = 0;
+        let totalAlumnos = 0;
+
+        function cambiarPestaña(pestañaClickeada, idContenido) {
+            document.querySelectorAll('.tab-item').forEach(tab => tab.classList.remove('active'));
+            pestañaClickeada.classList.add('active');
+            
+            document.querySelectorAll('.tab-content-panel').forEach(panel => panel.classList.remove('active'));
+            document.getElementById(idContenido).classList.add('active');
+        }
+
+        function actualizarVistaHorario(diaClickeado, nombreDia, clase, instructor, estado) {
+            document.querySelectorAll('.calendar-day').forEach(d => d.classList.remove('active'));
+            diaClickeado.classList.add('active');
+            
+            document.getElementById('txtDiaSeleccionado').innerText = nombreDia;
+            document.getElementById('txtClaseNombre').innerText = clase;
+            document.getElementById('txtClaseInstructor').innerText = instructor;
+            document.getElementById('txtClaseEstado').innerText = estado;
+            
+            if(estado.includes("Sala Llena")) {
+                document.getElementById('txtClaseEstado').style.color = "#c2185b";
+            } else {
+                document.getElementById('txtClaseEstado').style.color = "#2e7d32";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            cargarAlumnosDesdeBD();
+            cargarIngresosDesdeBD();
+            cargarInstructoresDesdeBD();
+        });
+
+        function calcularIngresoPromedio() {
+            const promedio = totalAlumnos > 0 ? totalIngresos / totalAlumnos : 0;
+            
+            document.getElementById('kpi-ingreso-promedio').innerText = new Intl.NumberFormat('es-CL', {
+                style: 'currency',
+                currency: 'CLP',
+                minimumFractionDigits: 0
+            }).format(promedio);
+        }
+
+        async function cargarIngresosDesdeBD() {
+            try {
+                const respuesta = await fetch("/api/resumen");
+                const datos = await respuesta.json();
+                
+                totalIngresos = datos.total_ingresos;
+                
+                const ingresosFormateados = new Intl.NumberFormat('es-CL', {
+                    style: 'currency',
+                    currency: 'CLP',
+                    minimumFractionDigits: 0
+                }).format(totalIngresos);
+
+                document.getElementById('kpi-ingresos-total').innerText = ingresosFormateados;
+                calcularIngresoPromedio();
+            } catch (error) {
+                console.error("Error cargando los ingresos desde el backend:", error);
+            }
+        }
+
+        async function cargarAlumnosDesdeBD() {
+            try {
+                const respuesta = await fetch(API_URL);
+                const alumnos = await respuesta.json();
+                
+                totalAlumnos = alumnos.length;
+                
+                const tabla = document.getElementById('cuerpoTablaAlumnos');
+                tabla.innerHTML = ""; 
+                
+                alumnos.forEach(alumno => {
+                    renderizarAlumnoEnTabla(alumno);
+                });
+                
+                document.getElementById('kpi-alumnos-count').innerText = totalAlumnos;
+                calcularIngresoPromedio();
+            } catch (error) {
+                console.error("Error conectando con el backend:", error);
+            }
+        }
+
+        async function agregarAlumnoEnTiempoReal(event) {
+            event.preventDefault(); 
+            
+            const nombre = document.getElementById('inputNombre').value;
+            const telefono = document.getElementById('inputTelefono').value;
+            const paquete = document.getElementById('inputPaquete').value;
+            
+            const nuevoAlumnoPayload = {
+                nombre: nombre,
+                telefono: telefono,
+                paquete: paquete
+            };
+
+            try {
+                const respuesta = await fetch(API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(nuevoAlumnoPayload)
+                });
+                
+                const resultado = await respuesta.json();
+                
+                if (respuesta.ok && (resultado.status === "success" || resultado.id)) {
+                    nuevoAlumnoPayload.id = resultado.id || resultado.id_generado;
+                    
+                    renderizarAlumnoEnTabla(nuevoAlumnoPayload);
+                    
+                    totalAlumnos += 1;
+                    document.getElementById('kpi-alumnos-count').innerText = totalAlumnos;
+                    
+                    await cargarIngresosDesdeBD();
+                    
+                    alert('¡' + nombre + ' registrado con éxito!');
+                    document.getElementById('formularioRegistroAlumno').reset();
+                } else {
+                    alert("Error en el servidor al intentar registrar al alumno.");
+                }
+            } catch (error) {
+                alert("Error: No se pudo establecer comunicación con el servidor backend.");
+                console.error(error);
+            }
+        }
+
+        /* CORRECCIÓN AQUÍ: Se resolvió la ruptura de sintaxis del código cortado original */
+        function renderizarAlumnoEnTabla(alumno) {
+            const tabla = document.getElementById('cuerpoTablaAlumnos');
+            const inicial = alumno.nombre.trim().charAt(0).toUpperCase() || '?';
+            
+            const esInactivo = alumno.id === 5 || alumno.paquete.toLowerCase() === 'ninguno';
+            
+            const badgeHTML = esInactivo 
+                ? `<span class="badge-status-table" style="margin-bottom:5px; display:inline-block;">RECARGA REQUERIDA</span>`
+                : `<span class="badge-status-table" style="background:#e8f5e9; color:#2e7d32; margin-bottom:5px; display:inline-block;">ACTIVO</span>`;
+
+            const nuevaFila = document.createElement('tr');
+            nuevaFila.innerHTML = `
+                <td>
+                    <div class="alumno-profile">
+                        <div class="avatar-circle">${inicial}</div>
+                        <div>
+                            <div class="alumno-name">${alumno.nombre}</div>
+                            <div class="alumno-phone">${alumno.telefono}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>${alumno.paquete}</td>
+                <td>
+                    ${badgeHTML} <br>
+                    <button class="btn-pasar-lista">Pasar Lista</button>
+                </td>
+            `;
+            tabla.appendChild(nuevaFila);
+        }
+
+        /* NUEVAS FUNCIONES: Manejo dinámico de instructores (Cargar, Agregar y Eliminar) */
+        async function cargarInstructoresDesdeBD() {
+            try {
+                const respuesta = await fetch(API_INSTRUCTORES);
+                const instructores = await respuesta.json();
+
+                const listaOficial = document.getElementById('cuerpoListaInstructores');
+                const sidebarOcupacion = document.getElementById('contenedorSidebarInstructores');
+
+                listaOficial.innerHTML = "";
+                sidebarOcupacion.innerHTML = "";
+
+                if(instructores.length === 0) {
+                    listaOficial.innerHTML = '<p style="grid-column: span 2; color:var(--text-sub);">No hay instructores activos.</p>';
+                    sidebarOcupacion.innerHTML = '<p style="color:var(--text-sub);">No hay datos de ocupación.</p>';
+                    return;
+                }
+
+                instructores.forEach(ins => {
+                    // Generar Iniciales para el Avatar Circular
+                    const iniciales = ins.nombre.trim().split(' ').map(n => n[0]).join('').toUpperCase().substring(0,2);
+                    
+                    // 1. Renderizar en la pestaña "Instructores"
+                    const tarjetaHTML = document.createElement('div');
+                    tarjetaHTML.className = "instructor-card-extended";
+                    tarjetaHTML.innerHTML = `
+                        <div class="instructor-img-placeholder">${iniciales}</div>
+                        <div style="flex-grow: 1;">
+                            <h4 style="margin:0 0 5px 0; font-size:18px;">${ins.nombre}</h4>
+                            <p style="margin:0; font-size:13px; color:var(--text-sub)">Especialidad: <strong>${ins.especialidad}</strong></p>
+                            <span style="font-size:11px; background:#f3e5f5; color:#4a148c; padding:3px 8px; border-radius:4px; display:inline-block; margin-top:5px;">${ins.tag || 'Instructor Activo'}</span>
+                        </div>
+                        <div>
+                            <button onclick="eliminarInstructorEnTiempoReal(${ins.id})" class="btn-delete-instructor">Eliminar</button>
                         </div>
                     `;
+                    listaOficial.appendChild(tarjetaHTML);
+
+                    // 2. Renderizar en la barra lateral de la "Vista General"
+                    const filaSidebar = document.createElement('div');
+                    filaSidebar.className = "instructor-row";
+                    
+                    // Color de realce si pasa el 90%
+                    const styleFill = ins.porcentaje_ocupacion >= 92 ? 'background:#c2185b;' : '';
+                    const styleText = ins.porcentaje_ocupacion >= 92 ? 'color:var(--pink-primary); font-weight:700;' : '';
+
+                    filaSidebar.innerHTML = `
+                        <div class="instructor-meta">
+                            <div>
+                                <span style="${styleText}">${ins.nombre}</span><br>
+                                <small style="color:var(--text-sub); font-size:11px;">Pico: ${ins.horario_pico}</small>
+                            </div>
+                            <strong style="${styleText}">${ins.porcentaje_ocupacion}%</strong>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" style="width: ${ins.porcentaje_ocupacion}%; ${styleFill}"></div>
+                        </div>
+                    `;
+                    sidebarOcupacion.appendChild(filaSidebar);
                 });
-            })
-            .catch(err => console.error("Error cargando instructores:", err));
-    }
 
-    // 4. NUEVO: Registrar Instructor en SQL
-    function registrarInstructor(e) {
-        e.preventDefault();
-        const payload = {
-            nombre: document.getElementById("inst-nombre").value,
-            especialidad: document.getElementById("inst-especialidad").value,
-            horario_pico: document.getElementById("inst-horario").value,
-            ocupacion: parseInt(document.getElementById("inst-ocupacion").value)
-        };
+            } catch (error) {
+                console.error("Error al cargar la nómina de instructores:", error);
+            }
+        }
 
-        fetch(`${API_URL}/instructores/`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(() => {
-            document.getElementById("form-instructor").reset();
-            cargarInstructores(); // Refresca la lista lateral automáticamente
-        })
-        .catch(err => alert("Error al guardar instructor: " + err));
-    }
-</script>
+        async function agregarInstructorEnTiempoReal(event) {
+            event.preventDefault();
 
+            const payload = {
+                nombre: document.getElementById('insNombre').value,
+                especialidad: document.getElementById('insEspecialidad').value,
+                horario_pico: document.getElementById('insHorario').value,
+                porcentaje_ocupacion: parseFloat(document.getElementById('insOcupacion').value),
+                tag: document.getElementById('insTag').value
+            };
+
+            try {
+                const respuesta = await fetch(API_INSTRUCTORES, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (respuesta.ok) {
+                    alert('¡Instructor incorporado con éxito a la plantilla!');
+                    document.getElementById('formularioRegistroInstructor').reset();
+                    cargarInstructoresDesdeBD();
+                } else {
+                    alert('Error del servidor al registrar instructor.');
+                }
+            } catch (error) {
+                console.error("Error de red:", error);
+            }
+        }
+
+        async function eliminarInstructorEnTiempoReal(id) {
+            if (!confirm("¿Estás segura de eliminar a este instructor del centro?")) return;
+
+            try {
+                const respuesta = await fetch(`${API_INSTRUCTORES}/${id}`, {
+                    method: "DELETE"
+                });
+
+                if(respuesta.ok) {
+                    cargarInstructoresDesdeBD();
+                } else {
+                    alert("No se pudo eliminar al instructor seleccionado.");
+                }
+            } catch (error) {
+                console.error("Error al procesar la baja:", error);
+            }
+        }
+    </script>
 </body>
 </html>
