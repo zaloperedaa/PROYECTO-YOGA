@@ -1,132 +1,131 @@
-from fastapi import FastAPI, Body, HTTPException
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from pydantic import BaseModel
 import sqlite3
 import os
-from datetime import datetime
 
-app = FastAPI()
+app = FastAPI(title="Lumina Yoga API")
 
-# Middleware configurado correctamente para evitar el bloqueo de CORS en el navegador
+# Permitir la conexión con el Frontend
 app.add_middleware(
-    CORSMiddleware, 
-    allow_origins=["*"], 
-    allow_credentials=True, 
-    allow_methods=["*"], 
-    allow_headers=["*"]
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# --- CONFIGURACIÓN DE BASE DE DATOS ---
-DB_PATH = "proyecto.db"
+# Modelos de datos para recibir peticiones
+class Alumno(BaseModel):
+    nombre: str
+    telefono: str
+    paquete: str
 
-def init_db():
-    conn = sqlite3.connect(DB_PATH)
+class Instructor(BaseModel):
+    nombre: str
+    especialidad: str
+    horario_pico: str
+    ocupacion: int
+
+def conectar_db():
+    # Se conecta buscando la carpeta 'db' saliendo desde 'backend'
+    path_db = os.path.join("..", "db", "lumina_yoga.db")
+    conn = sqlite3.connect(path_db)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+# Al iniciar, creamos las tablas si no existen por seguridad
+@app.on_event("startup")
+def crear_tablas_iniciales():
+    conn = conectar_db()
     cursor = conn.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS alumnos (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre TEXT, telefono TEXT, clases_disponibles INTEGER, paquete TEXT)''')
-    cursor.execute('''CREATE TABLE IF NOT EXISTS pagos (id INTEGER PRIMARY KEY AUTOINCREMENT, alumno_id INTEGER, monto REAL, fecha TEXT)''')
-    cursor.execute('''CREATE TABLE IF NOT EXISTS clases_programadas (id INTEGER PRIMARY KEY AUTOINCREMENT, nombre_clase TEXT, horario TEXT, duracion TEXT, cupos_totales INTEGER, cupos_disponibles INTEGER, instructor TEXT, descripcion_instructor TEXT)''')
-    
-    cursor.execute("SELECT COUNT(*) FROM clases_programadas")
-    if cursor.fetchone()[0] == 0:
-        cursor.executemany('INSERT INTO clases_programadas (nombre_clase, horario, duracion, cupos_totales, cupos_disponibles, instructor, descripcion_instructor) VALUES (?, ?, ?, ?, ?, ?, ?)', [
-            ("Yoga Vinyasa", "18:00", "1 hora", 15, 15, "Leo Rey", "Experto en fluidez y control respiratorio."),
-            ("Hatha Yoga", "19:30", "1.5 horas", 12, 12, "Tonka Tomicic", "Enfoque en relajación profunda y estiramientos."),
-            ("Meditación", "09:00", "1 hora", 20, 20, "Rafael Araneda", "Especialista en mindfulness y reducción de estrés."),
-            ("Power Yoga", "10:30", "1 hora", 18, 18, "Karol G", "Yoga dinámico con mucha energía y fuerza física.")
-        ])
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS alumnos (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT NOT NULL,
+        telefono TEXT NOT NULL,
+        paquete TEXT NOT NULL
+    );
+    """)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS instructores (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        nombre TEXT NOT NULL,
+        especialidad TEXT NOT NULL,
+        horario_pico TEXT NOT NULL,
+        ocupacion INTEGER NOT NULL
+    );
+    """)
     conn.commit()
     conn.close()
 
-init_db()
-
-# --- SERVIR FRONTEND ---
-
-@app.get("/")
-def read_root():
-    return FileResponse('index.html') 
-
-# NUEVO: Ruta para abrir el portal del alumno
-@app.get("/alumno")
-def read_alumno():
-    return FileResponse('alumno.html')
-
-app.mount("/static", StaticFiles(directory="."), name="static")
-
-# --- MÉTODOS API ---
-
-# NUEVO: Endpoint para que el HTML consulte los ingresos actualizados
-@app.get("/api/resumen")
-def obtener_resumen():
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute("SELECT SUM(monto) FROM pagos")
-    res = cursor.fetchone()
-    total_ingresos = res[0] if res[0] else 0.0
-    conn.close()
-    return {"total_ingresos": total_ingresos}
-
-@app.get("/valentina/ingreso-promedio")
-def obtener_ingreso_promedio():
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute("SELECT SUM(monto), COUNT(DISTINCT alumno_id) FROM pagos")
-    res = cursor.fetchone()
-    total_ingresos = res[0] or 0.0
-    total_alumnos = res[1] if res[1] and res[1] > 0 else 1
-    conn.close()
-    return {"ingreso_promedio": round(total_ingresos / total_alumnos, 2)}
-
-@app.get("/valentina/metricas")
-def obtener_metricas():
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM alumnos WHERE clases_disponibles > 0")
-    activos = cursor.fetchone()[0]
-    cursor.execute("SELECT SUM(monto) FROM pagos")
-    ingresos = cursor.fetchone()[0] or 0.0
-    conn.close()
-    return {"alumnos_activos": activos, "ingresos_totales": ingresos}
-
-@app.post("/alumnos/")
-def registrar_alumno(data: dict = Body(...)):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    paquete = data.get("paquete", "10 clases")
-    precios = {"10 clases": 25000.0, "20 clases": 38000.0, "mensualidad ilimitada": 45000.0}
-    monto = precios.get(paquete, 3500.0)
-    
-    cursor.execute("INSERT INTO alumnos (nombre, telefono, clases_disponibles, paquete) VALUES (?, ?, ?, ?)", 
-                   (data.get("nombre"), data.get("telefono"), 10, paquete))
-    alumno_id = cursor.lastrowid
-    cursor.execute("INSERT INTO pagos (alumno_id, monto, fecha) VALUES (?, ?, ?)", (alumno_id, monto, datetime.now().strftime("%Y-%m-%d")))
-    conn.commit()
-    conn.close()
-    return {"status": "success", "id": alumno_id}
-
+# ================= ENDPOINTS DE ALUMNOS =================
 @app.get("/alumnos/")
 def obtener_alumnos():
-    conn = sqlite3.connect(DB_PATH)
+    conn = conectar_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, nombre, telefono, clases_disponibles, paquete FROM alumnos")
-    res = cursor.fetchall()
+    cursor.execute("SELECT id, nombre, telefono, paquete FROM alumnos")
+    alumnos = [dict(row) for row in cursor.fetchall()]
     conn.close()
-    return [{"id": f[0], "nombre": f[1], "telefono": f[2], "clases": f[3], "paquete": f[4]} for f in res]
+    return alumnos
 
-@app.get("/clases/")
-def obtener_clases():
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, nombre_clase, horario, duracion, cupos_disponibles, instructor, descripcion_instructor FROM clases_programadas")
-    res = cursor.fetchall()
-    conn.close()
-    return [{"id": x[0], "nombre_clase": x[1], "horario": x[2], "duracion": x[3], "cupos": x[4], "instructor": x[5], "descripcion": x[6]} for x in res]
+@app.post("/alumnos/")
+def registrar_alumno(alumno: Alumno):
+    try:
+        conn = conectar_db()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO alumnos (nombre, telefono, paquete) VALUES (?, ?, ?)",
+            (alumno.nombre, alumno.telefono, alumno.paquete)
+        )
+        conn.commit()
+        id_generado = cursor.lastrowid
+        conn.close()
+        return {"status": "success", "id": id_generado}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/asistencia/{alumno_id}")
-def registrar_asistencia(alumno_id: int):
-    conn = sqlite3.connect(DB_PATH)
+# ================= ENDPOINTS DE INSTRUCTORES =================
+@app.get("/instructores/")
+def obtener_instructores():
+    conn = conectar_db()
     cursor = conn.cursor()
-    cursor.execute("UPDATE alumnos SET clases_disponibles = clases_disponibles - 1 WHERE id = ? AND clases_disponibles > 0", (alumno_id,))
-    conn.commit()
+    cursor.execute("SELECT id, nombre, especialidad, horario_pico, ocupacion FROM instructores ORDER BY ocupacion DESC")
+    instructores = [dict(row) for row in cursor.fetchall()]
     conn.close()
-    return {"status": "success"}
+    return instructores
+
+@app.post("/instructores/")
+def registrar_instructor(instructor: Instructor):
+    try:
+        conn = conectar_db()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO instructores (nombre, especialidad, horario_pico, ocupacion) VALUES (?, ?, ?, ?)",
+            (instructor.nombre, instructor.especialidad, instructor.horario_pico, instructor.ocupacion)
+        )
+        conn.commit()
+        id_generado = cursor.lastrowid
+        conn.close()
+        return {"status": "success", "id": id_generado}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ================= ENDPOINT REPORTE FINANCIERO =================
+@app.get("/api/resumen")
+def obtener_resumen():
+    conn = conectar_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT paquete FROM alumnos")
+    filas = cursor.fetchall()
+    conn.close()
+    
+    precios = {
+        "10 clases": 25000,
+        "20 clases": 38000,
+        "mensualidad ilimitada": 45000,
+        "ninguno": 0
+    }
+    
+    total = sum(precios.get(row["paquete"].lower(), 0) for row in filas)
+    return {"total_ingresos": total}
