@@ -41,9 +41,15 @@ def init_db():
 init_db()
 
 # --- SERVIR FRONTEND ---
+
 @app.get("/")
 def read_root():
     return FileResponse('index.html') 
+
+# NUEVO: Ruta para abrir el portal del alumno
+@app.get("/alumno")
+def read_alumno():
+    return FileResponse('alumno.html')
 
 app.mount("/static", StaticFiles(directory="."), name="static")
 
